@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalkinMotion: Immersive Digital Frontier</title>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a1a;
+            --text-primary: #e0e0ff;
+            --accent-color: #4a90e2;
+            --accent-secondary: #50f050;
+            --neon-glow: #00ffff;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', 'Arial', sans-serif;
+            perspective: 1000px;
+        }
+        
+        #fullscreenSpline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0.9; /* Increased visibility */
+            filter: brightness(1.6) contrast(1.4) saturate(1.3); /* Brighter, richer colors */
+            transform: scale(1.2) rotateX(10deg); /* Increased scale for more zoom */
+            transition: all 1s ease;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2) 10%, transparent 70%),
+                        rgba(0, 0, 0, 0.2); /* Adds soft cinematic glow */
+            backdrop-filter: blur(5px); /* Optional: smooth effect on the scene */
+            box-shadow: 0px 0px 50px rgba(255, 255, 255, 0.4); /* Glow effect */
+        }
+        
+.control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+            background: rgba(255,255,255,0.05);
+            padding: 15px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(74,144,226,0.5);
+        }
+
+        .control-button:hover {
+            background-color: var(--accent-secondary);
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(80,240,80,0.7);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 1s;
+            overflow: hidden;
+        }
+        
+        /* Neon Text Animation */
+        .neon-text {
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+            text-align: center;
+            animation: neon-blink 2s infinite alternate;
+        }
+        
+        /* Neon Text Glow */
+        @keyframes neon-blink {
+            0% {
+                text-shadow: 0 0 5px var(--neon-glow), 0 0 10px var(--neon-glow), 0 0 20px var(--neon-glow), 0 0 30px var(--accent-secondary);
+            }
+            100% {
+                text-shadow: 0 0 5px var(--accent-secondary), 0 0 10px var(--accent-secondary), 0 0 20px var(--neon-glow), 0 0 30px var(--neon-glow);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <!-- Lottie Animation for the loader -->
+        <lottie-player 
+            src="https://assets2.lottiefiles.com/packages/lf20_uwR49r.json"  
+            background="transparent" 
+            speed="1" 
+            style="width: 200px; height: 200px;"  
+            loop 
+            autoplay>
+        </lottie-player>
+    
+        <!-- Neon Text -->
+        <h2 class="neon-text mt-4">TalkinMotion</h2>
+    </div>
+    
+    <div class="overlay"></div>
+    
+
+    <spline-viewer 
+        id="fullscreenSpline"
+        url="https://prod.spline.design/kbqX0XLlprGMLYRd/scene.splinecode"
+    ></spline-viewer>
+
+    <div class="control-panel">
+        <button id="enterButton" class="control-button" title="Enter Experience">
+            <i class="fas fa-door-open"></i>
+        </button>
+        <button id="audioToggle" class="control-button" title="Toggle Audio">
+            <i class="fas fa-volume-up"></i>
+        </button>
+        <button id="infoButton" class="control-button" title="Experience Info">
+            <i class="fas fa-info"></i>
+        </button>
+    </div>
+
+    <div id="infoModal" class="hidden fixed top-0 left-0 w-full h-full bg-black bg-opacity-80 z-50 flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-lg max-w-xl text-center">
+            <h2 class="text-2xl mb-4 neon-text">TalkinMotion</h2>
+            <p class="mb-4">Transform your dreams into reality with our immersive platform that seamlessly blends advanced text-to-video generation with captivating voiceovers, bringing your ideas to life like never before.</p>
+            <button id="closeInfoModal" class="bg-blue-600 text-white px-4 py-2 rounded">Close</button>
+        </div>
+    </div>
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+    <script>
+        class QuantumNexusExperience {
+            constructor() {
+                this.initializeElements();
+                this.setupEventListeners();
+                this.audioEnabled = true;
+                this.initializeAudio();
+                this.setupLoadingSequence();
+            }
+
+            initializeElements() {
+                this.enterButton = document.getElementById('enterButton');
+                this.audioToggle = document.getElementById('audioToggle');
+                this.infoButton = document.getElementById('infoButton');
+                this.splineScene = document.getElementById('fullscreenSpline');
+                this.loadingOverlay = document.getElementById('loadingOverlay');
+                this.infoModal = document.getElementById('infoModal');
+                this.closeInfoModal = document.getElementById('closeInfoModal');
+            }
+
+            setupEventListeners() {
+                this.enterButton.addEventListener('click', () => this.navigateToMainSite());
+                this.audioToggle.addEventListener('click', () => this.toggleAudio());
+                this.splineScene.addEventListener('load', () => this.onSceneLoad());
+                this.infoButton.addEventListener('click', () => this.showInfoModal());
+                this.closeInfoModal.addEventListener('click', () => this.hideInfoModal());
+            }
+
+            setupLoadingSequence() {
+                window.addEventListener('load', () => {
+                    setTimeout(() => {
+                        this.loadingOverlay.style.opacity = '0';
+                        setTimeout(() => {
+                            this.loadingOverlay.style.display = 'none';
+                            this.speakMessage('Welcome to TalkinMotion,"Transform your dreams into reality with our immersive platform that seamlessly blends advanced text-to-video generation with captivating voiceovers, bringing your ideas to life like never before."');
+                        }, 1000);
+                    }, 2000);
+                });
+            }
+
+            initializeAudio() {
+                // Placeholder for future advanced audio integration
+                this.backgroundMusic = new Audio('path/to/ambient/music.mp3');
+                this.backgroundMusic.loop = true;
+            }
+
+            toggleAudio() {
+                this.audioEnabled = !this.audioEnabled;
+                this.audioToggle.innerHTML = this.audioEnabled 
+                    ? '<i class="fas fa-volume-up"></i>' 
+                    : '<i class="fas fa-volume-mute"></i>';
+
+                if (this.audioEnabled) {
+                    this.backgroundMusic.play();
+                    this.speakMessage('Audio enabled');
+                } else {
+                    this.backgroundMusic.pause();
+                    this.speakMessage('Audio disabled');
+                }
+            }
+
+            speakMessage(message) {
+                if ('speechSynthesis' in window && this.audioEnabled) {
+                    const utterance = new SpeechSynthesisUtterance(message);
+                    utterance.pitch = 1;
+                    utterance.rate = 0.8;
+                    window.speechSynthesis.speak(utterance);
+                }
+            }
+
+            showInfoModal() {
+                this.infoModal.classList.remove('hidden');
+                this.infoModal.classList.add('flex');
+                this.speakMessage('Displaying experience information');
+            }
+
+            hideInfoModal() {
+                this.infoModal.classList.add('hidden');
+                this.infoModal.classList.remove('flex');
+            }
+
+            onSceneLoad() {
+                this.speakMessage('Quantum environment successfully initialized');
+                this.splineScene.style.transform = 'scale(1) rotateX(0deg)';
+            }
+
+            navigateToMainSite() {
+                // Replace with your actual homepage
+                window.location.href = 'index3.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new QuantumNexusExperience();
+        });
+    </script>
+</body>
+</html>
